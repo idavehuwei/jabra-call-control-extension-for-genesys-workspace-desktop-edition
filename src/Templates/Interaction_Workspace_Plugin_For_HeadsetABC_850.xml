@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<metaData>
+  <cfgApplication type="157" version="8.5.000.32" templateVersion="8.5.000.32">
+    <description>
+      Interaction Workspace Plug-in for HeadsetABC adds functionality to
+      Workspace that enables agents to send broadcast messages, to manage
+	  click-to actions (dial, IM, email, SMS) from external apps, to
+	  perform Collaboration via Skype for Business, ...
+    </description>
+    <configuration>
+      <core>
+        <parameter name="name" displayName="Application Name">
+          <format type="string" default="Interaction_Workspace_8" />
+        </parameter>
+        <parameter name="host" displayName="Host">
+          <format type="string" default="" />
+        </parameter>
+        <startInfo>
+          <parameter name="workDirectory" displayName="">
+            <format type="string" default="" />
+          </parameter>
+          <parameter name="commandLine" displayName="">
+            <format type="string" default="" />
+          </parameter>
+          <parameter name="commandArgs" displayName="">
+            <format type="string" default="" />
+          </parameter>
+          <parameter name="startupTimeout" displayName="">
+            <format type="numeric" default=""> </format>
+          </parameter>
+          <parameter name="shutdownTimeout" displayName="">
+            <format type="numeric" default=""> </format>
+          </parameter>
+          <parameter name="autoRestart" displayName="">
+            <format type="boolean" default="true"> </format>
+          </parameter>
+        </startInfo>
+        <portInfos>
+          <port>
+            <parameter name="connPort">
+              <format type="numeric" default="" />
+            </parameter>
+            <parameter name="connId">
+              <format type="string" default="default"> </format>
+            </parameter>
+            <parameter name="connProtocol">
+              <format type="chooseOne" default="">
+                <option value="none" />
+              </format>
+            </parameter>
+            <parameter name="transportParam" displayName="">
+              <format type="string" default="" />
+            </parameter>
+            <parameter name="appParam" displayName="">
+              <format type="string" default="" />
+            </parameter>
+          </port>
+        </portInfos>
+        <connections></connections>
+      </core>
+      <userProperties></userProperties>
+      <options></options>
+      <tasks displayName="Interaction Workspace Plug-in for HeadsetABC">
+        <description>Tasks of the Interaction Workspace plug-in for HeadsetABC</description>
+        <group name="IWHeadsetABCTasks" displayName="Interaction Workspace HeadsetABC Plug-in Privileges">
+          <description>Privileges related to the usage of HeadsetABC plug-in function set in Interaction Workspace</description>
+
+          <task name="InteractionWorkspace.HeadsetABC.canUse" displayName="HeadsetABC - Can Use Plug-in for HeadsetABC">
+            <description>The agent is permitted to use functions of  HeadsetABC plug-in. The other privileges of  HeadsetABC cannot be configured if the value is Not Assigned</description>
+          </task>
+          
+        </group>
+      </tasks>
+    </configuration>
+    <installation>
+      <step name="silentInstallation" displayName="" type="GenesysSilent" />
+    </installation>
+  </cfgApplication>
+</metaData>
+
+
+
+
+

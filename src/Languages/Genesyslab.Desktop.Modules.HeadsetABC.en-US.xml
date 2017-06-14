@@ -1,0 +1,18 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Dictionary EnglishName="English" CultureName="English" Culture="en-US" CustomDictionary="true" >
+
+  <Value Id="HeadsetABC.Message1" Text="First message" />
+  <Value Id="HeadsetABC.Message2" Text="Second message" />
+
+  <Value Id="HeadsetABC.Alert1" Text="Alert message with first parameter {0} and second {1}" />
+  
+  <Value Id="HeadsetABC.Menu.Answer" Header="_Answer" Name="Answer" />
+  <Value Id="HeadsetABC.Menu.Release" Header="_Release" Name="Release" />
+  <Value Id="HeadsetABC.Menu.Hold" Header="_Hold" Name="Hold" />
+  <Value Id="HeadsetABC.Menu.Retrieve" Header="_Retrieve" Name="Retrieve" />
+  <Value Id="HeadsetABC.Menu.Mute" Header="_Mute" Name="Mute" />
+  <Value Id="HeadsetABC.Menu.Unmute" Header="_Unmute" Name="Unmute" />
+
+
+
+</Dictionary>
