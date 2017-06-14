@@ -296,15 +296,15 @@ namespace JabraCallControlExtension
 
     public void RegisterInteractionEventHandler()
     {
-      interactionManager.InteractionEvent += new System.EventHandler<EventArgs<IInteraction>>(HeadsetABCModule_InteractionEvent);
+      interactionManager.InteractionEvent += InteractionEvent;
     }
 
     public void UnregisterInteractionEventHandler()
     {
-      interactionManager.InteractionEvent -= new System.EventHandler<EventArgs<IInteraction>>(HeadsetABCModule_InteractionEvent);
+      interactionManager.InteractionEvent -= InteractionEvent;
     }
 
-    private void HeadsetABCModule_InteractionEvent(object sender, EventArgs<IInteraction> e)
+    private void InteractionEvent(object sender, EventArgs<IInteraction> e)
     {
       IInteraction interaction = e.Value;
       IInteractionVoice iv = interaction as IInteractionVoice;
