@@ -73,18 +73,18 @@ namespace JabraCallControlExtension
 
     #region API Notifications Placeholder
 
-    private void SendNotificationToHeadsetABC(IInteractionVoice ixnVoice, string status)
+    private void SendNotificationToDevice(IInteractionVoice ixnVoice, string status)
     {
-      log.Debug("Notify HeadsetABC of call in " + status);
+      log.Debug("Notify device of call in " + status);
       // TODO
-      MessageBox.Show("Notify HeadsetABC of call in " + status);
+      MessageBox.Show("Notify device of call in " + status);
     }
 
-    private void SendNotificationToHeadsetABC(SIPEndpoint sipEndpoint, bool isMicrophoneMuted)
+    private void SendNotificationToDevice(SIPEndpoint sipEndpoint, bool isMicrophoneMuted)
     {
-      log.Debug("Notify HeadsetABC of Microphone " + (isMicrophoneMuted ? "Mute" : "Unmute"));
+      log.Debug("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
       // TODO
-      MessageBox.Show("Notify HeadsetABC of Microphone " + (isMicrophoneMuted ? "Mute" : "Unmute"));
+      MessageBox.Show("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
     }
 
     #endregion
@@ -317,25 +317,25 @@ namespace JabraCallControlExtension
           if (receivedEvent.Id == EventRinging.MessageId)
           {
             RegisterSIPEPEventHandlers(iv);
-            SendNotificationToHeadsetABC(iv, "Ringing");
+            SendNotificationToDevice(iv, "Ringing");
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Connected)
         {
           if (receivedEvent.Id == EventEstablished.MessageId)
           {
-            SendNotificationToHeadsetABC(iv, "Established");
+            SendNotificationToDevice(iv, "Established");
           }
           else if (receivedEvent.Id == EventRetrieved.MessageId)
           {
-            SendNotificationToHeadsetABC(iv, "Retrieved");
+            SendNotificationToDevice(iv, "Retrieved");
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Held)
         {
           if (receivedEvent.Id == EventHeld.MessageId)
           {
-            SendNotificationToHeadsetABC(iv, "Held");
+            SendNotificationToDevice(iv, "Held");
           }
         }
         else if ((iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Ended) ||
@@ -344,14 +344,14 @@ namespace JabraCallControlExtension
                  (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Redirected))
         {
           // NB: Sent two times....
-          SendNotificationToHeadsetABC(iv, "Ended");
+          SendNotificationToDevice(iv, "Ended");
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.PresentedOut)
         {
           if (receivedEvent.Id == EventDialing.MessageId)
           {
             RegisterSIPEPEventHandlers(iv);
-            SendNotificationToHeadsetABC(iv, "Dialing");
+            SendNotificationToDevice(iv, "Dialing");
           }
           else if (receivedEvent.Id == EventNetworkReached.MessageId)
           {
@@ -367,7 +367,6 @@ namespace JabraCallControlExtension
 
         }
       }
-
     }
 
     #endregion
@@ -528,7 +527,7 @@ namespace JabraCallControlExtension
       {
         SIPEndpoint sipEndpoint = sender as SIPEndpoint;
         bool microphoneMuted = sipEndpoint.IsMicrophoneMuted;
-        SendNotificationToHeadsetABC(sipEndpoint, microphoneMuted);
+        SendNotificationToDevice(sipEndpoint, microphoneMuted);
       }
       // Should also work with IsSpeakerMuted, MicrophoneVolume, SpeakerVolume
     }
