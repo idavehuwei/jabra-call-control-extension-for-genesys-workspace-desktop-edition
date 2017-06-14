@@ -1,20 +1,9 @@
-﻿using Genesyslab.Desktop.Infrastructure;
-using Genesyslab.Desktop.Infrastructure.Configuration;
+﻿using Genesyslab.Desktop.Infrastructure.Configuration;
 
 namespace JabraCallControlExtension
 {
   public class JabraOptions : Options
   {
-    // Options stored in Genesys Configuration Layer (centralized configuration)
-    // Define the option names stored in [interaction-workspace] section
-    // It can be Workspace Desktop Edition own options or custom options
-    // Options can be stored in Options/Annex of the following objects (rule of precedence apply):
-    // Tenant, Application (Workspace Desktop Edition), Agent Group, Agent/Person
-    private const string HeadsetABC_Option1_Str = "headsetabc.option1";
-    private const string HeadsetABC_Option2_Str = "headsetabc.option2";
-    private const string HeadsetABC_Option3_Str = "headsetabc.option3";
-    private const string GenesysSIPEndpoint_UseHeadsetOption3Str = "sipendpoint.policy.device.use_headset";
-
     // Privileges (Genesys Roles & Privileges)
     // Define the names of the privileges which can be checked from the module
     // It can be Workspace Desktop Edition existing privileges or custom ones
@@ -64,29 +53,6 @@ namespace JabraCallControlExtension
     }
 
     #endregion
-
-    #region Access Options
-
-    // Retrieve Option Value as string array
-    // ex: "headsetabc.option1" = "value1, value2, value3"
-    public string[] Option1 { get { return configManager.GetValueAsStringArray(HeadsetABC_Option1_Str, null); } }
-
-    // Retrieve Option Value as String
-    // ex: "headsetabc.option2" = "my string option"
-    public string GetOption2()
-    {
-      return this.configManager.GetValueAsString(HeadsetABC_Option2_Str, "default value");
-    }
-
-    // Retrieve Option Value as boolean
-    // ex: "headsetabc.option3" = "true"
-    public bool GetOption3()
-    {
-      return this.configManager.GetValueAsBoolean(HeadsetABC_Option3_Str, false);
-    }
-
-    #endregion
-
   }
 }
 
