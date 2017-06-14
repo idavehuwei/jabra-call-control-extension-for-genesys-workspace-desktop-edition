@@ -1,6 +1,5 @@
 ﻿using Genesyslab.Desktop.Infrastructure;
 using Genesyslab.Desktop.Infrastructure.Configuration;
-using Tomers.WPF.Localization;
 
 namespace JabraCallControlExtension
 {
@@ -84,33 +83,6 @@ namespace JabraCallControlExtension
     public bool GetOption3()
     {
       return this.configManager.GetValueAsBoolean(HeadsetABC_Option3_Str, false);
-    }
-
-    #endregion
-
-    #region Localization - Access Language Dictionary
-
-    // Define the content of messages/button names/.... in custom language files
-    // Value will be extracted using Agent's currently selected language (in Workspace Desktop Edition)
-    // Ex: Genesyslab.Desktop.Modules.HeadsetABC.en-US.xml, Genesyslab.Desktop.Modules.HeadsetABC.fr-FR.xml
-    public static string GetMessage1TextForCurrentLanguage()
-    {
-      return LanguageDictionary.Current.Translate<string>("HeadsetABC.Message1", "Text");
-    }
-
-    // Workspace Desktop Edition modules language files can also be accessed
-    // Value will be extracted using Agent's currently selected language (in Workspace Desktop Edition)
-    // Ex: Genesyslab.Desktop.Modules.Windows.en-US.xml, Genesyslab.Desktop.Modules.Windows.fr-FR.xml, ...
-    // <Value Id="State.Interaction.Held" Text="On Hold"/>
-    public static string GetInteractionHeldTextForCurrentLanguage()
-    {
-      return LanguageDictionary.Current.Translate<string>("State.Interaction.Held", "Text");
-    }
-
-    // Generic
-    public static string GetLabelIdForCurrentLanguage(string labelId, string key)
-    {
-      return LanguageDictionary.Current.Translate<string>(labelId, key);
     }
 
     #endregion
