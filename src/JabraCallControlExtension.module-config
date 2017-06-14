@@ -18,7 +18,7 @@
 	<modules>
 		<!-- Uncomment the following to load the module if the corresponding task is granted -->
 		<module assemblyFile="JabraCallControlExtension.dll"
-				moduleType="JabraCallControlExtension.HeadsetABCModule"
+				moduleType="JabraCallControlExtension.JabraModule"
 				moduleName="JabraCallControlModule"
 				startupLoaded="false"/>
 	</modules>
