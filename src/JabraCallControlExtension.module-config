@@ -7,11 +7,11 @@
 	</configSections>
 
 	<tasks>
-		<!-- If the task 'InteractionWorkspace.HeadsetABC.canUse' is granted,
+		<!-- If the task 'JabraCallControlExtension.canUse' is granted,
 				the bootstrap downloads the files in the group 'clickOnceGroupsToDownload' if any,
 				and then, the module in the 'modulesToLoad' list are loaded.
 				'clickOnceGroupsToDownload' and 'modulesToLoad' are a coma separated lists -->
-		<!--<task name="InteractionWorkspace.HeadsetABC.canUse" clickOnceGroupsToDownload="Voice" modulesToLoad="JabraCallControlModule" />-->
+		<!--<task name="JabraCallControlExtension.canUse" clickOnceGroupsToDownload="Voice" modulesToLoad="JabraCallControlModule" />-->
     <task name="InteractionWorkspace.Voice.canUse" clickOnceGroupsToDownload="Voice" modulesToLoad="JabraCallControlModule" />
   </tasks>
 

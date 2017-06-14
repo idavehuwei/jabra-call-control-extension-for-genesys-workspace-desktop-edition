@@ -19,7 +19,7 @@ namespace JabraCallControlExtension
     // Define the names of the privileges which can be checked from the module
     // It can be Workspace Desktop Edition existing privileges or custom ones
     // Privileges can be enabled for an Agent/Person or for an entire Access Group
-    private const string Privilege_CanUse_Str = "InteractionWorkspace.HeadsetABC.canUse";
+    private const string Privilege_CanUse_Str = "JabraCallControlExtension.canUse";
     private const string Privilege_CanUseGenesysSIPEndpoint_Str = "InteractionWorkspace.SIP.UseSIPEndpoint";
 
     #region Singleton
@@ -41,10 +41,10 @@ namespace JabraCallControlExtension
 
     #region Access Privileges
 
-    // Check if the current Workspace Desktop Edition user has been assigned the HeadsetABC CanUse privilege
+    // Check if the current Workspace Desktop Edition user has been assigned the JabraCallControlExtension CanUse privilege
     public bool CanUse()
     {
-      // TODO - TO CHANGE - Verification of HeadsetABC privilege disabled (for testing) - Always allow
+      // TODO - TO CHANGE - Verification of JabraCallControlExtension privilege disabled (for testing) - Always allow
       return true;
 
       if (this.Task[Privilege_CanUse_Str])
