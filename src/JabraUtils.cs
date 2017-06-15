@@ -32,6 +32,10 @@ namespace JabraCallControlExtension
 
     Dictionary<SIPEndpoint, SIPEndpoint> startedSipEndpoints = new Dictionary<SIPEndpoint, SIPEndpoint>();
 
+    private IInteractionVoice incomingCall = null;
+    private IInteractionVoice activeCall = null;
+    private IInteractionVoice heldCall = null;
+
     #endregion
 
     #region Singleton
@@ -88,7 +92,6 @@ namespace JabraCallControlExtension
 
       // Get a list of currently available Jabra devices
       ReadOnlyCollection<IHidTelephonyDevice> devices = jabraDeviceService.AvailableDevices;
-
       foreach (var device in devices)
       {
         AddJabraDevice(device);
@@ -129,6 +132,7 @@ namespace JabraCallControlExtension
 
     private void OnButtonInput(object sender, ButtonInputEventArgs e)
     {
+      // TODO: Handle Jabra device button input here
     }
 
     private void SetHookState(bool offHook)
@@ -216,10 +220,39 @@ namespace JabraCallControlExtension
       }
     }
 
+    private void SetCallOnHold(bool onHold)
+    {
+      lock (jabraLock)
+      {
+        foreach (var jabraDevice in jabraDevices)
+        {
+          if (!jabraDevice.IsLocked)
+          {
+            jabraDevice.Lock();
+          }
+          if (onHold)
+          {
+            if (!jabraDevice.IsOnHold)
+            {
+              jabraDevice.SetCallOnHold(true);
+            }
+          }
+          else
+          {
+            if (jabraDevice.IsOnHold)
+            {
+              jabraDevice.SetCallOnHold(false);
+            }
+          }
+        }
+      }
+    }
+
     #endregion
 
     #region API Notifications Placeholder
 
+    /*
     private void SendNotificationToDevice(IInteractionVoice ixnVoice, string status)
     {
       log.Debug("Notify device of call in " + status);
@@ -233,6 +266,7 @@ namespace JabraCallControlExtension
       // TODO
 //      MessageBox.Show("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
     }
+    */
 
     #endregion
 
@@ -464,30 +498,40 @@ namespace JabraCallControlExtension
           if (receivedEvent.Id == EventRinging.MessageId)
           {
             RegisterSIPEPEventHandlers(iv);
-            SendNotificationToDevice(iv, "Ringing");
+//            SendNotificationToDevice(iv, "Ringing");
             SetRinger(true);
+            activeCall = heldCall = null;
+            incomingCall = iv;
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Connected)
         {
           if (receivedEvent.Id == EventEstablished.MessageId)
           {
-            SendNotificationToDevice(iv, "Established");
+//            SendNotificationToDevice(iv, "Established");
             SetRinger(false);
             SetHookState(true);
+            incomingCall = heldCall = null;
+            activeCall = iv;
           }
           else if (receivedEvent.Id == EventRetrieved.MessageId)
           {
-            SendNotificationToDevice(iv, "Retrieved");
+//            SendNotificationToDevice(iv, "Retrieved");
             SetRinger(false);
             SetHookState(true);
+            incomingCall = heldCall = null;
+            activeCall = iv;
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Held)
         {
           if (receivedEvent.Id == EventHeld.MessageId)
           {
-            SendNotificationToDevice(iv, "Held");
+//            SendNotificationToDevice(iv, "Held");
+            SetCallOnHold(true);
+            SetHookState(false);
+            incomingCall = activeCall = null;
+            heldCall = iv;
           }
         }
         else if ((iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Ended) ||
@@ -496,16 +540,17 @@ namespace JabraCallControlExtension
                  (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Redirected))
         {
           // NB: Sent two times....
-          SendNotificationToDevice(iv, "Ended");
+//          SendNotificationToDevice(iv, "Ended");
           SetRinger(false);
           SetHookState(false);
+          activeCall = incomingCall = heldCall = null;
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.PresentedOut)
         {
           if (receivedEvent.Id == EventDialing.MessageId)
           {
             RegisterSIPEPEventHandlers(iv);
-            SendNotificationToDevice(iv, "Dialing");
+//            SendNotificationToDevice(iv, "Dialing");
           }
           else if (receivedEvent.Id == EventNetworkReached.MessageId)
           {
@@ -681,7 +726,7 @@ namespace JabraCallControlExtension
       {
         SIPEndpoint sipEndpoint = sender as SIPEndpoint;
         bool microphoneMuted = sipEndpoint.IsMicrophoneMuted;
-        SendNotificationToDevice(sipEndpoint, microphoneMuted);
+//        SendNotificationToDevice(sipEndpoint, microphoneMuted);
 
         SetMicrophoneMuted(microphoneMuted);
       }
