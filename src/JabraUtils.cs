@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Windows;
 using System.Windows.Threading;
@@ -13,6 +14,7 @@ using Genesyslab.Desktop.Modules.Voice.Model.Interactions;
 using Genesyslab.Platform.Commons.Logging;
 using Genesyslab.Platform.Commons.Protocols;
 using Genesyslab.Platform.Voice.Protocols.TServer.Events;
+using JabraHidTelephonyApi;
 using Microsoft.Practices.Composite.Events;
 using Microsoft.Practices.Unity;
 
@@ -69,7 +71,152 @@ namespace JabraCallControlExtension
       // this.agent = container.Resolve<IAgent>();
 
       this.log = log;
+
+      InitJabraLibrary();
     }
+
+    #region Jabra device management
+
+    private object jabraLock = new object();
+    private IDeviceService jabraDeviceService;
+    private List<IHidTelephonyDevice> jabraDevices = new List<IHidTelephonyDevice>();
+
+    private void InitJabraLibrary()
+    {
+      // Get a device service interface
+      jabraDeviceService = ServiceFactory.CreateDeviceService();
+
+      // Get a list of currently available Jabra devices
+      ReadOnlyCollection<IHidTelephonyDevice> devices = jabraDeviceService.AvailableDevices;
+
+      foreach (var device in devices)
+      {
+        AddJabraDevice(device);
+      }
+
+      // Subscribe to device added/removed events
+      jabraDeviceService.DeviceAdded += OnJabraDeviceAdded;
+      jabraDeviceService.DeviceRemoved += OnJabraDeviceRemoved;
+    }
+
+    private void OnJabraDeviceAdded(object sender, DeviceAddedEventArgs deviceAddedEventArgs)
+    {
+      AddJabraDevice(deviceAddedEventArgs.Device);
+    }
+
+    private void OnJabraDeviceRemoved(object sender, DeviceRemovedEventArgs deviceRemovedEventArgs)
+    {
+      RemoveJabraDevice(deviceRemovedEventArgs.Device);
+    }
+
+    private void AddJabraDevice(IHidTelephonyDevice device)
+    {
+      lock (jabraLock)
+      {
+        device.ButtonInput += OnButtonInput;
+        jabraDevices.Add(device);
+      }
+    }
+
+    private void RemoveJabraDevice(IHidTelephonyDevice device)
+    {
+      lock (jabraLock)
+      {
+        device.ButtonInput -= OnButtonInput;
+        jabraDevices.Remove(device);
+      }
+    }
+
+    private void OnButtonInput(object sender, ButtonInputEventArgs e)
+    {
+    }
+
+    private void SetHookState(bool offHook)
+    {
+      lock (jabraLock)
+      {
+        foreach (var jabraDevice in jabraDevices)
+        {
+          if (!jabraDevice.IsLocked)
+          {
+            jabraDevice.Lock();
+          }
+          if (offHook)
+          {
+            if (!jabraDevice.IsOffHook)
+            {
+              jabraDevice.SetHookState(true);
+            }
+          }
+          else
+          {
+            if (jabraDevice.IsOffHook)
+            {
+              jabraDevice.SetHookState(false);
+            }
+            jabraDevice.Unlock();
+          }
+        }
+      }
+    }
+
+    private void SetMicrophoneMuted(bool muted)
+    {
+      lock (jabraLock)
+      {
+        foreach (var jabraDevice in jabraDevices)
+        {
+          if (!jabraDevice.IsLocked)
+          {
+            jabraDevice.Lock();
+          }
+          if (muted)
+          {
+            if (!jabraDevice.IsMicrophoneMuted)
+            {
+              jabraDevice.SetMicrophoneMuted(true);
+            }
+          }
+          else
+          {
+            if (jabraDevice.IsMicrophoneMuted)
+            {
+              jabraDevice.SetMicrophoneMuted(false);
+            }
+          }
+        }
+      }
+    }
+
+    private void SetRinger(bool ringing)
+    {
+      lock (jabraLock)
+      {
+        foreach (var jabraDevice in jabraDevices)
+        {
+          if (!jabraDevice.IsLocked)
+          {
+            jabraDevice.Lock();
+          }
+          if (ringing)
+          {
+            if (!jabraDevice.IsRinging)
+            {
+              jabraDevice.SetRinger(true);
+            }
+          }
+          else
+          {
+            if (jabraDevice.IsRinging)
+            {
+              jabraDevice.SetRinger(false);
+            }
+          }
+        }
+      }
+    }
+
+    #endregion
 
     #region API Notifications Placeholder
 
@@ -77,14 +224,14 @@ namespace JabraCallControlExtension
     {
       log.Debug("Notify device of call in " + status);
       // TODO
-      MessageBox.Show("Notify device of call in " + status);
+//      MessageBox.Show("Notify device of call in " + status);
     }
 
     private void SendNotificationToDevice(SIPEndpoint sipEndpoint, bool isMicrophoneMuted)
     {
       log.Debug("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
       // TODO
-      MessageBox.Show("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
+//      MessageBox.Show("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
     }
 
     #endregion
@@ -318,6 +465,7 @@ namespace JabraCallControlExtension
           {
             RegisterSIPEPEventHandlers(iv);
             SendNotificationToDevice(iv, "Ringing");
+            SetRinger(true);
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Connected)
@@ -325,10 +473,14 @@ namespace JabraCallControlExtension
           if (receivedEvent.Id == EventEstablished.MessageId)
           {
             SendNotificationToDevice(iv, "Established");
+            SetRinger(false);
+            SetHookState(true);
           }
           else if (receivedEvent.Id == EventRetrieved.MessageId)
           {
             SendNotificationToDevice(iv, "Retrieved");
+            SetRinger(false);
+            SetHookState(true);
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Held)
@@ -345,6 +497,8 @@ namespace JabraCallControlExtension
         {
           // NB: Sent two times....
           SendNotificationToDevice(iv, "Ended");
+          SetRinger(false);
+          SetHookState(false);
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.PresentedOut)
         {
@@ -528,6 +682,8 @@ namespace JabraCallControlExtension
         SIPEndpoint sipEndpoint = sender as SIPEndpoint;
         bool microphoneMuted = sipEndpoint.IsMicrophoneMuted;
         SendNotificationToDevice(sipEndpoint, microphoneMuted);
+
+        SetMicrophoneMuted(microphoneMuted);
       }
       // Should also work with IsSpeakerMuted, MicrophoneVolume, SpeakerVolume
     }

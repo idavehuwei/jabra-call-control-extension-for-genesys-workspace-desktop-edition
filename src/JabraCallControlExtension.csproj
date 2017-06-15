@@ -118,6 +118,9 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Import\Genesyslab.Platform.Voice.Protocols.dll</HintPath>
     </Reference>
+    <Reference Include="JabraHidTelephonyApi">
+      <HintPath>Import\JabraHidTelephonyApi.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Practices.Composite, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>Import\Microsoft.Practices.Composite.dll</HintPath>

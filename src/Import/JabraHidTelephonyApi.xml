@@ -1,0 +1,951 @@
+<?xml version="1.0"?>
+<doc>
+  <assembly>
+    <name>JabraHidTelephonyApi</name>
+  </assembly>
+  <members>
+    <member name="T:JabraHidTelephonyApi.IDeviceService">
+      <summary>
+            Device service providing Jabra USB HID telephony device discovery.
+            </summary>
+    </member>
+    <member name="E:JabraHidTelephonyApi.IDeviceService.DeviceAdded">
+      <summary>
+            Raised when a device has been added (plugged in).
+            </summary>
+    </member>
+    <member name="E:JabraHidTelephonyApi.IDeviceService.DeviceRemoved">
+      <summary>
+            Raised when a device has been removed (unplugged).
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IDeviceService.AvailableDevices">
+      <summary>
+            Get available Jabra HID USB devices that support (softphone) telephony.
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.DeviceNotLockedException">
+      <summary>
+            This exception is thrown when an attempt is made change the call state of
+            a device that is not locked.
+            </summary>
+    </member>
+    <member name="M:JabraHidTelephonyApi.DeviceNotLockedException.#ctor(System.String)">
+      <summary>
+            Constructor
+            </summary>
+      <param name="message">Error message</param>
+    </member>
+    <member name="T:JabraHidTelephonyApi.DeviceRemovedException">
+      <summary>
+            This exception is thrown if the accessed device has been removed from the PC.
+            </summary>
+    </member>
+    <member name="M:JabraHidTelephonyApi.DeviceRemovedException.#ctor(System.String)">
+      <summary>
+            Constructor
+            </summary>
+      <param name="message">Error message</param>
+    </member>
+    <member name="T:JabraHidTelephonyApi.IHidTelephonyDevice">
+      <summary>
+            Generic Jabra USB HID device interface for softphone call control integration.
+            </summary>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.Lock">
+      <summary>
+            Lock device. A lock must have been obtained prior to calling any of the
+            Set... methods (SetHookState, SetMicrophoneMute, SetRinger, SetOnHold).
+            </summary>
+      <remarks>
+            A softphone client must lock a device before it initiates a call. 
+            This is to ensure that other softphone clients do not interfere 
+            while the call is in progress.
+            When the call is terminated the client must call Unlock() to the unlock 
+            the device so it becomes available to other softphone clients.
+            In case the lock could not be obtained, the softphone client should 
+            not put the call through.
+            </remarks>
+      <returns>
+        <c>true</c> if lock was obtained; otherwise <c>false</c></returns>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.Unlock" />
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsLocked" />
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.Unlock">
+      <summary>
+            Unlock device. Only the client owning the lock can unlock a device.
+            </summary>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.Lock" />
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsLocked" />
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetHookState(System.Boolean)">
+      <summary>
+            Sets the state of the hook switch (active call state).
+            </summary>
+      <remarks>This is only a request. The device may not be able to fulfill the request.</remarks>
+      <param name="offHook">If set to <c>true</c> the device is off-hook (in a call).</param>
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetAudioLinkState(System.Boolean)">
+      <summary>
+            Sets the state of the audio link (radio link) between a base/dongle and a wireless headset.
+            When an audio link is open, all sounds from the PC will be audible in the headset 
+            and audio from your headset microphone will be available to PC applications. An 
+            audio link is opened automatically whenever you make or receive a call and closed 
+            again when you hang up. Use this command if you would like to listen to music or 
+            other audio when you are not on a call.
+            Changes in the audio link state is reported as <c>StateChangeEvent.AudioLinkOpen</c> events.
+            </summary>
+      <remarks>This is only a request. The device may not be able to fulfill the request.</remarks>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsAudioLinkOpen" />
+      <param name="linkOpen">If <c>true</c> the device is requested to open an audio link. If <c>false</c> the device is requested to close the audio link.</param>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCommunicationLinkState(System.Boolean)">
+      <summary>
+            Sets the state of the communication link (radio link) between a base/dongle and a wireless headset.
+            When a communication link is open, all sounds from the PC will be audible in the headset 
+            and audio from your headset microphone will be available to PC applications.
+            A communication link is typically used when you want to join a web conference. 
+            It can also be used for manual control of the headset's hook state when it is used 
+            with an unsupported softphone.
+            Changes in the communication link state is reported as <c>StateChangeEvent.CommunicationLinkOpen</c> events.
+            </summary>
+      <remarks>This is only a request. The device may not be able to fulfill the request.</remarks>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCommunicationLinkOpen" />
+      <param name="linkOpen">If <c>true</c> the device is requested to open a communication link. If <c>false</c> the device is requested to close the communication link.</param>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetMicrophoneMuted(System.Boolean)">
+      <summary>
+            Sets the microphone mute state.
+            </summary>
+      <remarks>This is only a request. The device may not be able to fulfill the request.</remarks>
+      <param name="muted">If set to <c>true</c> the microphone is muted.</param>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsMicrophoneMuteSupported" />
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetRinger(System.Boolean)">
+      <summary>
+            Sets the ringer state.
+            </summary>
+      <param name="ringing">If set to <c>true</c> a ringtone is played in the headset.</param>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.UseInBandRinger" />
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetRinger(System.Boolean,System.String)">
+      <summary>
+            Sets the ringer state and caller ID.
+            </summary>
+      <param name="ringing">If set to <c>true</c> a ringtone is played in the headset.</param>
+      <param name="callerId">Caller ID</param>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.UseInBandRinger" />
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetRinger(System.Boolean,System.Boolean)">
+      <summary>
+            Sets the ringer state.
+            </summary>
+      <param name="ringing">Controls the headset ringing state.</param>
+      <param name="noRingTone">If <c>true</c> no ringtone is played in the headset. Only a visual indication is made.</param>
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCallerId(System.String)">
+      <summary>
+            Sets the caller ID.
+            </summary>
+      <param name="callerId">Caller ID</param>
+      <remarks>The caller ID may be truncated by the target device.</remarks>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCallerIdSupported" />
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCallOnHold(System.Boolean)">
+      <summary>
+            Sets the active call on hold.
+            </summary>
+      <remarks>This is only a request. The device may not be able to fulfill the request.</remarks>
+      <param name="onHold">If set to <c>true</c> the active call is set on hold. If set to <c>false</c> the held call is resumed.</param>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCallOnHoldSupported" />
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOnHold" />
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetMessageWaiting(System.Boolean)">
+      <summary>
+            Turns the message waiting indicator on or off.
+            </summary>
+      <param name="msgWaiting">Message waiting indicator state</param>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetBusylightState(System.Boolean)">
+      <summary>
+            Sets the state of the busylight.
+            </summary>
+      <param name="on">if set to <c>true</c> then busylight is turned on</param>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsSetBusylightSupported" />
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsBusylightOn" />
+      <exception cref="T:JabraHidTelephonyApi.DeviceNotLockedException">Thrown if device has not been locked.</exception>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.GetBatteryStatus">
+      <summary>
+            Get current battery status.
+            It is recommended to only call this method to get the initial status and then 
+            subscribe to BatteryStatusChanged events.
+            <remarks>A battery level of 0 percent means that the level is currently unavailable.</remarks></summary>
+      <returns>Battery status</returns>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsBatteryStatusSupported" />
+      <seealso cref="E:JabraHidTelephonyApi.IHidTelephonyDevice.BatteryStatusChanged" />
+      <seealso cref="T:JabraHidTelephonyApi.BatteryStatus" />
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.GetPhoneNumber(JabraHidTelephonyApi.PhoneNumberId)">
+      <summary>
+            Get phone number.
+            </summary>
+      <remarks>Currently not supported by any devices.</remarks>
+      <param name="id">Phone number identifier</param>
+      <returns>Phone number. Returns null if undefined.</returns>
+      <exception cref="T:JabraHidTelephonyApi.DeviceRemovedException">Thrown if device has been removed.</exception>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IHidTelephonyDevice.SelectProprietaryHidTelephonyInterface">
+      <summary>
+            Forces the device to use its proprietary GN HID telephony interface for 
+            outgoing call HID events to the PC.
+            It is recommended to use the proprietary GN HID telephony interface to avoid
+            signaling conflicts with e.g. Microsoft Skype for Business (Lync).
+            Only applicable for devices that have a proprietary GN HID telephony interface.
+            </summary>
+      <remarks>
+            Do not call this method if you connect to the integration service.
+            In that case the HID telephony interface selection is controlled by 
+            the integration service. 
+            </remarks>
+      <remarks>
+            Calling this method may cause a restart of the device, and the USB
+            product ID of the device may change.
+            </remarks>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.HasProprietaryHidTelephonyInterface" />
+    </member>
+    <member name="E:JabraHidTelephonyApi.IHidTelephonyDevice.DeviceRemoved">
+      <summary>
+            The DeviceRemoved event is raised when the physical device represented by 
+            this object has been removed (unplugged) from the PC.
+            After receiving this event a DeviceRemovedException will be thrown on
+            device access.
+            <remarks>
+            When the physical device has been removed it is the object creator's 
+            responsibility to call Dispose() on the object.
+            Note: Do not call Dispose synchronously from a DeviceRemoved event handler.
+            </remarks></summary>
+    </member>
+    <member name="E:JabraHidTelephonyApi.IHidTelephonyDevice.ButtonInput">
+      <summary>
+            The ButtonInput event is raised when a button input is received from a device.
+            </summary>
+    </member>
+    <member name="E:JabraHidTelephonyApi.IHidTelephonyDevice.StateChanged">
+      <summary>
+            The StateChanged event is raised when the device state has changed.
+            </summary>
+    </member>
+    <member name="E:JabraHidTelephonyApi.IHidTelephonyDevice.BatteryStatusChanged">
+      <summary>
+            The BatteryStatusChanged event is raised when the device's battery status has changed.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.ProductId">
+      <summary>
+            Get USB product ID
+            </summary>
+      <value>USB product ID</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.Name">
+      <summary>
+            Get device name
+            </summary>
+      <value>Device name</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.AudioDeviceName">
+      <summary>
+            Get audio device name in Windows
+            </summary>
+      <value>Audio device name</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.FirmwareVersion">
+      <summary>
+            Get firmware version
+            </summary>
+      <value>Firmware version</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.UsbDevicePath">
+      <summary>
+            Get USB device path for this device's HID telephony top-level collection.
+            </summary>
+      <value>USB device path</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.DeviceInstanceId">
+      <summary>
+            Get Windows' Device Instance ID for this device's HID telephony top-level collection.
+            </summary>
+      <value>Device Instance ID</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.SerialNumber">
+      <summary>
+            Get serial number. 
+            Returns an empty string if the device does not have a serial number.
+            </summary>
+      <value>Serial number</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.HasProprietaryHidTelephonyInterface">
+      <summary>
+            Indicates whether the device has a Jabra proprietary HID telephony interface.
+            </summary>
+      <value>
+        <c>true</c> if the device has a Jabra proprietary HID telephony interface</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SelectProprietaryHidTelephonyInterface" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsLyncCompliant">
+      <summary>
+            Indicates whether the device is Microsoft Lync compliant.
+            </summary>
+      <value>
+        <c>true</c> if the device is Microsoft Lync compliant; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsInBandRingerSupported">
+      <summary>
+            Indicates whether the device can play in-band ringtones (ringtones played by the softphone).
+            </summary>
+      <value>
+        <c>true</c> if in-band ringtones is supported; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOutBandRingerSupported">
+      <summary>
+            Indicates whether the device can play out-band ringtones (ringtones generated locally in the headset).
+            </summary>
+      <value>
+        <c>true</c> if out-band ringtones is supported; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.UseInBandRinger">
+      <summary>
+            Controls whether to use an in-band ringtone (the ringtone played by the softphone) or
+            an out-band ringtone (a ringtone generated locally in the headset).
+            Default value is UseInBandRinger = true.
+            </summary>
+      <remarks>
+            When using out-band ringtone you may hear both a softphone ringtone and
+            and a local ringtone in the headset.
+            </remarks>
+      <value>When <c>true</c> use in-band ringtones; otherwise use out-band ringtones</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsHookStateSupported">
+      <summary>
+            Indicates whether hook state signaling is supported.
+            </summary>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOffHook" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetHookState(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsMicrophoneMuteSupported">
+      <summary>
+            Indicates whether the device has microphone mute support.
+            </summary>
+      <value>
+        <c>true</c> if microphone mute is supported; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsMicrophoneMuted" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetMicrophoneMuted(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCallOnHoldSupported">
+      <summary>
+            Indicates whether the device supports call on hold / resume call (aka. flash).
+            </summary>
+      <value>
+        <c>true</c> if <c>SetOnHold</c> is supported; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOnHold" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCallOnHold(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCallerIdSupported">
+      <summary>
+            Indicates whether the device is able to show caller ID.
+            </summary>
+      <value>
+        <c>true</c> if caller ID is supported; otherwise <c>false</c>.</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCallerId(System.String)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsBatteryStatusSupported">
+      <summary>
+            Indicates whether the device can report battery status.
+            </summary>
+      <value>
+        <c>true</c> if battery status is supported; otherwise <c>false</c>.</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.GetBatteryStatus" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsLineBusySupported">
+      <summary>
+            Indicates whether line busy (in a call) signaling is supported.
+            </summary>
+      <value>
+        <c>true</c> if <c>IsLineBusy</c> is supported; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsLineBusy" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOutOfRangeSupported">
+      <summary>
+            Indicates whether 'out of range' signaling is supported for a wireless headset.
+            <value><c>true</c> if <c>IsOutOfRange</c> is supported; otherwise <c>false</c>.</value><seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOutOfRange" /></summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsSetBusylightSupported">
+      <summary>
+            Indicates whether busylight is supported.
+            </summary>
+      <value>
+        <c>true</c> if <c>SetBusylight</c> is supported; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsBusylightOn" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetBusylightState(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsMessageWaitingSupported">
+      <summary>
+            Indicates whether the device has a message waiting indicator.
+            <value><c>true</c> if the device has a message waiting indicator; otherwise <c>false</c>.</value></summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsQDConnectionStateSupported">
+      <summary>
+            Indicates whether the device (controller) can report Quick Disconnect(QD) connection state.
+            <value><c>true</c> if Quick Disconnect(QD) connection state is supported; otherwise <c>false</c>.</value></summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsJackConnectionStateSupported">
+      <summary>
+            Indicates whether the device (controller) can report jack plug connection state.
+            <value><c>true</c> if jack connection state is supported; otherwise <c>false</c>.</value></summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsAudioLinkSupported">
+      <summary>
+            Indicates whether the device supports open/close audio link.
+            </summary>
+      <value>
+        <c>true</c> if audio link is supported; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsAudioLinkOpen" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetAudioLinkState(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsAudioLinkOpen">
+      <summary>
+            Indicates whether the audio link is open or not.
+            This property is only applicable for wireless headsets.
+            </summary>
+      <value>
+        <c>true</c> if audio link is open; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsAudioLinkSupported" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetAudioLinkState(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCommunicationLinkSupported">
+      <summary>
+            Indicates whether the device supports open/close communication link.
+            </summary>
+      <value>
+        <c>true</c> if audio link is open; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCommunicationLinkOpen" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCommunicationLinkState(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCommunicationLinkOpen">
+      <summary>
+            Indicates whether a communication link is open or not.
+            This property is only applicable for wireless headsets.
+            </summary>
+      <value>
+        <c>true</c> if communication link is open; otherwise <c>false</c>.</value>
+      <seealso cref="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsCommunicationLinkSupported" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCommunicationLinkState(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsMicrophoneMuted">
+      <summary>
+            Get current microphone mute state
+            </summary>
+      <value>
+        <c>true</c> if microphone is muted; otherwise <c>false</c>.</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetMicrophoneMuted(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsRinging">
+      <summary>
+            Get current ringer state.
+            </summary>
+      <value>
+        <c>true</c> if ring indicator is on; otherwise <c>false</c>.</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetRinger(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOffHook">
+      <summary>
+            Get current hook state.
+            </summary>
+      <value>
+        <c>true</c> if device is off-hook (in an active call); otherwise <c>false</c>.</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetHookState(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOnHold">
+      <summary>
+            Get current 'call on hold' state.
+            </summary>
+      <value>
+        <c>true</c> if a call is on hold; otherwise <c>false</c>.</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.SetCallOnHold(System.Boolean)" />
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsLineBusy">
+      <summary>
+            Get current 'line busy' state.
+            </summary>
+      <value>
+        <c>true</c> if the device is busy (in a call) on one of its supported phone interfaces; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsOutOfRange">
+      <summary>
+            Get current 'out of range' state for a wireless headset.
+            </summary>
+      <value>
+        <c>true</c> if the headset is disconnected, or out of range; <c>false</c> if the headset is connected.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsBusylightOn">
+      <summary>
+            Get current busylight state.
+            </summary>
+      <value>
+        <c>true</c> if the device's busylight indicator is on; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsHeadsetDocked">
+      <summary>
+            Get current headset docked state.
+            Only applicable for devices with a dockable headset.
+            </summary>
+      <value>
+        <c>true</c> if the headset is docked in its base or cradle; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsHeadsetQDConnected">
+      <summary>
+            Indicates whether a headset is currently connected via a Jabra Quick Disconnect (QD) plug to a controller or adapter.
+            Only applicable for headset controllers or adapters with a QD connector.
+            </summary>
+      <value>
+        <c>true</c> if the headset is connected; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsHeadsetJackConnected">
+      <summary>
+            Indicates whether a headset is currently connected via a jack plug to a controller or adapter.
+            Only applicable for headset controllers or adapters with a jack plug connector.
+            </summary>
+      <value>
+        <c>true</c> if the headset is connected; otherwise <c>false</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IHidTelephonyDevice.IsLocked">
+      <summary>
+            Indicates whether device is currently locked or not.
+            </summary>
+      <value>
+        <c>true</c> if the device is locked; otherwise <c>false</c>.</value>
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.Lock" />
+      <seealso cref="M:JabraHidTelephonyApi.IHidTelephonyDevice.Unlock" />
+    </member>
+    <member name="T:JabraHidTelephonyApi.IIntegrationService">
+      <summary>
+            Interface for third-party client status integration into Jabra applications, such as Jabra DIRECT.
+            </summary>
+    </member>
+    <member name="M:JabraHidTelephonyApi.IIntegrationService.ConnectClient(System.Guid,System.String,System.Version)">
+      <summary>
+            Connects a client to the integration service.
+            A client must connect to the service before any other 
+            property or method is called.
+            </summary>
+      <param name="id">Unique client ID</param>
+      <param name="clientName">Client (softphone) name</param>
+      <param name="clientVersion">Client (softphone) version</param>
+      <returns>
+        <c>true</c> if connected, otherwise <c>false</c></returns>
+      <seealso cref="M:JabraHidTelephonyApi.IIntegrationService.DisconnectClient(System.Guid)" />
+    </member>
+    <member name="M:JabraHidTelephonyApi.IIntegrationService.DisconnectClient(System.Guid)">
+      <summary>
+            Disconnects a client from the integration service.
+            A client must disconnect before it terminates.
+            </summary>
+      <param name="id">Unique client ID. Must be the same ID as used in <c>ConnectClient</c></param>
+    </member>
+    <member name="E:JabraHidTelephonyApi.IIntegrationService.FocusChanged">
+      <summary>
+            Raised when the focus state has changed.
+            The new state can be determined by reading the IsInFocus property.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IIntegrationService.ClientState">
+      <summary>
+            Current state of the client.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IIntegrationService.AudioInputDeviceName">
+      <summary>
+            The audio input (microphone) device currently selected by the softphone.
+            The AudioInputDeviceName is only used for informational purposes.
+            Setting the AudioInputDeviceName is optional.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IIntegrationService.AudioOutputDeviceName">
+      <summary>
+            The audio output (speaker) device currently selected by the softphone.
+            The AudioOutputDeviceName is only used for informational purposes.
+            Setting the AudioOutputDeviceName is optional.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IIntegrationService.CallControlDeviceName">
+      <summary>
+            The headset device currently selected by the softphone for remote call control.
+            The CallControlDeviceName is only used for informational purposes.
+            Setting the CallControlDeviceName is optional.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.IIntegrationService.IsInFocus">
+      <summary>
+            Indicates whether this client is in focus.
+            A client is only allowed to lock and access a device when it is in focus.
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.ServiceFactory">
+      <summary>
+            Factory class for creating device and integration service instances.
+            </summary>
+    </member>
+    <member name="M:JabraHidTelephonyApi.ServiceFactory.CreateDeviceService">
+      <summary>
+            Creates a device service instance.
+            </summary>
+      <returns>Device service interface</returns>
+    </member>
+    <member name="M:JabraHidTelephonyApi.ServiceFactory.CreateIntegrationService">
+      <summary>
+            Creates an integration service instance.
+            </summary>
+      <returns>Integration service interface</returns>
+    </member>
+    <member name="T:JabraHidTelephonyApi.ButtonId">
+      <summary>
+            Button identifiers
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.HookSwitch">
+      <summary>
+            Hook switch (answer/end) button
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.MicMute">
+      <summary>
+            Microphone mute button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.Redial">
+      <summary>
+            Redial button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.RejectCall">
+      <summary>
+            Reject call button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.Flash">
+      <summary>
+            Flash (hold/resume call) button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.DialEmergencyNumber">
+      <summary>
+            Emergency number button combination pressed
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.SpeakerPhone">
+      <summary>
+            SpeakerPhone button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.VoiceMail">
+      <summary>
+            Voice mail button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey0">
+      <summary>
+            Phone key '0' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey1">
+      <summary>
+            Phone key '1' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey2">
+      <summary>
+            Phone key '2' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey3">
+      <summary>
+            Phone key '3' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey4">
+      <summary>
+            Phone key '4' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey5">
+      <summary>
+            Phone key '5' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey6">
+      <summary>
+            Phone key '6' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey7">
+      <summary>
+            Phone key '7' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey8">
+      <summary>
+            Phone key '8' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKey9">
+      <summary>
+            Phone key '9' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKeyStar">
+      <summary>
+            Phone key '*' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKeyPound">
+      <summary>
+            Phone key '#' button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.PhoneKeyClear">
+      <summary>
+            Phone key clear button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.SpeedDial">
+      <summary>
+            Speed dial button 
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.VolumeUp">
+      <summary>
+            Volume up button pressed
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.VolumeDown">
+      <summary>
+            Volume down button pressed
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.CustomButton1">
+      <summary>
+            Custom button 1
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.CustomButton2">
+      <summary>
+            Custom button 2
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ButtonId.CustomButton3">
+      <summary>
+            Custom button 3
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.StateId">
+      <summary>
+            Device state identifiers
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.LineBusy">
+      <summary>
+            Indicates whether headset is busy (in a call) or not.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.AudioLink">
+      <summary>
+            Indicates whether a wireless audio link (radio link) is open or not.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.CommunicationLink">
+      <summary>
+            Indicates whether a wireless communication link is open or not.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.OutOfRange">
+      <summary>
+            Indicates whether a wireless headset is out of range of its base or not.
+            When a wireless headset is disconnected, or powered off, it is also considered out of range.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.IdleBusy">
+      <summary>
+            Indicates whether headset is busy in idle state or not.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.HeadsetDocked">
+      <summary>
+            Indicates whether the headset is docked (true) in, or undocked (false) from, its base or cradle.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.HeadsetQDConnected">
+      <summary>
+            Indicates whether a headset is connected via a Jabra Quick Disconnect (QD) connector.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.StateId.HeadsetJackConnected">
+      <summary>
+            Indicates whether a headset is connected via a jack connector.
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.BatteryStatus">
+      <summary>
+            Battery status
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.BatteryStatus.LevelInPercent">
+      <summary>
+            Current battery level in percent (0 means unknown/unavailable).
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.BatteryStatus.Charging">
+      <summary>
+            Current charging status.
+            </summary>
+      <value>
+        <c>True</c> if battery is being charged, otherwise <c>False</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.BatteryStatus.BatteryLow">
+      <summary>
+            Battery low indication.
+            </summary>
+      <value>
+        <c>True</c> if battery is low, otherwise <c>False</c>.</value>
+    </member>
+    <member name="T:JabraHidTelephonyApi.PhoneNumberId">
+      <summary>
+            Phone number identifiers.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.PhoneNumberId.EmergencyNumber">
+      <summary>
+            Emergency phone number ID
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.PhoneNumberId.VoiceMailNumber">
+      <summary>
+            Voice mail phone number ID
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.PhoneNumberId.SpeedDialNumber">
+      <summary>
+            Speed dial phone number ID
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.ClientStateId">
+      <summary>
+            Client state enumeration.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ClientStateId.NotReadyForTelephony">
+      <summary>
+            The client (softphone) is not ready for telephony.
+            For example if the user has not signed in in the softphone.
+            </summary>
+    </member>
+    <member name="F:JabraHidTelephonyApi.ClientStateId.ReadyForTelephony">
+      <summary>
+            The client (softphone) is ready for telephony.
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.DeviceAddedEventArgs">
+      <summary>
+            Event data when a device has been added (plugged in) to the PC.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.DeviceAddedEventArgs.Device">
+      <summary>
+            Added device
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.DeviceRemovedEventArgs">
+      <summary>
+            Event data when a device has been removed (unplugged) from the PC.
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.DeviceRemovedEventArgs.Device">
+      <summary>
+            Removed device
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.ButtonInputEventArgs">
+      <summary>
+            Button input event data
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.ButtonInputEventArgs.Button">
+      <summary>
+            Button identifier
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.ButtonInputEventArgs.Value">
+      <summary>
+            Button value.
+            If the button is a relative button the value is undefined (null).
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.StateChangeEventArgs">
+      <summary>
+            State change event data
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.StateChangeEventArgs.State">
+      <summary>
+            State identifier
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.StateChangeEventArgs.Value">
+      <summary>
+            New state value.
+            </summary>
+    </member>
+    <member name="T:JabraHidTelephonyApi.BatteryChangeEventArgs">
+      <summary>
+            Battery status change event arguments
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.BatteryChangeEventArgs.LevelInPercent">
+      <summary>
+            Current battery level in percent (0 means unknown/unavailable).
+            </summary>
+    </member>
+    <member name="P:JabraHidTelephonyApi.BatteryChangeEventArgs.Charging">
+      <summary>
+            Current charging status.
+            </summary>
+      <value>
+        <c>True</c> if battery is being charged, otherwise <c>False</c>.</value>
+    </member>
+    <member name="P:JabraHidTelephonyApi.BatteryChangeEventArgs.BatteryLow">
+      <summary>
+            Battery low indication.
+            </summary>
+      <value>
+        <c>True</c> if battery is low, otherwise <c>False</c>.</value>
+    </member>
+  </members>
+</doc>
