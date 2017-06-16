@@ -511,6 +511,7 @@ namespace JabraCallControlExtension
 //            SendNotificationToDevice(iv, "Established");
             SetRinger(false);
             SetHookState(true);
+            SetCallOnHold(false);
             incomingCall = heldCall = null;
             activeCall = iv;
           }
@@ -519,6 +520,7 @@ namespace JabraCallControlExtension
 //            SendNotificationToDevice(iv, "Retrieved");
             SetRinger(false);
             SetHookState(true);
+            SetCallOnHold(false);
             incomingCall = heldCall = null;
             activeCall = iv;
           }
@@ -530,6 +532,7 @@ namespace JabraCallControlExtension
 //            SendNotificationToDevice(iv, "Held");
             SetCallOnHold(true);
             SetHookState(false);
+            SetRinger(false);
             incomingCall = activeCall = null;
             heldCall = iv;
           }
@@ -543,6 +546,7 @@ namespace JabraCallControlExtension
 //          SendNotificationToDevice(iv, "Ended");
           SetRinger(false);
           SetHookState(false);
+          SetCallOnHold(false);
           activeCall = incomingCall = heldCall = null;
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.PresentedOut)
