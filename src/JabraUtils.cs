@@ -188,9 +188,8 @@ namespace JabraCallControlExtension
 
       #endregion
 
-      #region Hold/Resume
+      #region Flash
 
-      /*
       if (e.Button == ButtonId.Flash)
       {
         if (activeCall != null)
@@ -202,7 +201,6 @@ namespace JabraCallControlExtension
           RequestRetrieveCall(heldCall);
         }
       }
-      */
 
       #endregion
 
@@ -311,7 +309,6 @@ namespace JabraCallControlExtension
 
     private void SetCallOnHold(bool onHold)
     {
-      /*
       lock (jabraLock)
       {
         foreach (var jabraDevice in jabraDevices)
@@ -323,7 +320,6 @@ namespace JabraCallControlExtension
           jabraDevice.SetCallOnHold(onHold);
         }
       }
-      */
     }
 
     #endregion
