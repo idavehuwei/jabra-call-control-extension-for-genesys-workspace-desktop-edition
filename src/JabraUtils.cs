@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 using Genesyslab.Desktop.Infrastructure;
@@ -35,6 +37,7 @@ namespace JabraCallControlExtension
     private IInteractionVoice incomingCall = null;
     private IInteractionVoice activeCall = null;
     private IInteractionVoice heldCall = null;
+    private bool isCallMuted = false;
 
     #endregion
 
@@ -84,9 +87,28 @@ namespace JabraCallControlExtension
     private object jabraLock = new object();
     private IDeviceService jabraDeviceService;
     private List<IHidTelephonyDevice> jabraDevices = new List<IHidTelephonyDevice>();
+    private BlockingCollection<Action> workQueue = new BlockingCollection<Action>();
 
     private void InitJabraLibrary()
     {
+      // Get the work-queue up and running
+      Task.Factory.StartNew(() =>
+      {
+        while (true)
+        {
+          var action = workQueue.Take();
+          try
+          {
+            action();
+          }
+          catch (Exception e)
+          {
+            // Don't do anyting - only log the exception
+            log.Error($"Got an exception (workQueue): {e.Message}");
+          }
+        }
+      });
+
       // Get a device service interface
       jabraDeviceService = ServiceFactory.CreateDeviceService();
 
@@ -104,12 +126,20 @@ namespace JabraCallControlExtension
 
     private void OnJabraDeviceAdded(object sender, DeviceAddedEventArgs deviceAddedEventArgs)
     {
-      AddJabraDevice(deviceAddedEventArgs.Device);
+      Action action = () =>
+      {
+        AddJabraDevice(deviceAddedEventArgs.Device);
+      };
+      workQueue.Add(action);
     }
 
     private void OnJabraDeviceRemoved(object sender, DeviceRemovedEventArgs deviceRemovedEventArgs)
     {
-      RemoveJabraDevice(deviceRemovedEventArgs.Device);
+      Action action = () =>
+      {
+        RemoveJabraDevice(deviceRemovedEventArgs.Device);
+      };
+      workQueue.Add(action);
     }
 
     private void AddJabraDevice(IHidTelephonyDevice device)
@@ -132,7 +162,101 @@ namespace JabraCallControlExtension
 
     private void OnButtonInput(object sender, ButtonInputEventArgs e)
     {
-      // TODO: Handle Jabra device button input here
+      #region Mic mute
+
+      if (e.Button == ButtonId.MicMute)
+      {
+        Action action = () =>
+        {
+          lock (jabraLock)
+          {
+            if (activeCall != null)
+            {
+              if (!isCallMuted)
+              {
+                RequestMuteCallViaSIPEndpoint(activeCall);
+              }
+              else
+              {
+                RequestUnmuteCallViaSIPEndpoint(activeCall);
+              }
+            }
+          }
+        };
+        workQueue.Add(action);
+      }
+
+      #endregion
+
+      #region Hold/Resume
+
+      /*
+      if (e.Button == ButtonId.Flash)
+      {
+        if (activeCall != null)
+        {
+          RequestHoldCall(activeCall);
+        }
+        else if (heldCall != null)
+        {
+          RequestRetrieveCall(heldCall);
+        }
+      }
+      */
+
+      #endregion
+
+      #region Reject call
+
+      if (e.Button == ButtonId.RejectCall)
+      {
+        Action action = () =>
+        {
+          lock (jabraLock)
+          {
+            if (incomingCall != null)
+            {
+              if (e.Value.HasValue && e.Value == true)
+              {
+                RequestReleaseCall(incomingCall);
+              }
+            }
+          }
+
+        };
+        workQueue.Add(action);
+      }
+
+      #endregion
+
+      #region Hook
+
+      if (e.Button == ButtonId.HookSwitch)
+      {
+        Action action = () =>
+        {
+          lock (jabraLock)
+          {
+            if (incomingCall != null)
+            {
+              if (e.Value.HasValue && e.Value == true)
+              {
+                RequestAnswerCall(incomingCall);
+              }
+            }
+            else if (activeCall != null)
+            {
+              if (e.Value.HasValue && e.Value == false)
+              {
+                RequestReleaseCall(activeCall);
+              }
+            }
+          }
+        };
+        workQueue.Add(action);
+      }
+
+      #endregion
     }
 
     private void SetHookState(bool offHook)
@@ -145,19 +269,9 @@ namespace JabraCallControlExtension
           {
             jabraDevice.Lock();
           }
-          if (offHook)
+          jabraDevice.SetHookState(offHook);
+          if (!offHook)
           {
-            if (!jabraDevice.IsOffHook)
-            {
-              jabraDevice.SetHookState(true);
-            }
-          }
-          else
-          {
-            if (jabraDevice.IsOffHook)
-            {
-              jabraDevice.SetHookState(false);
-            }
             jabraDevice.Unlock();
           }
         }
@@ -168,26 +282,14 @@ namespace JabraCallControlExtension
     {
       lock (jabraLock)
       {
+        isCallMuted = muted;
         foreach (var jabraDevice in jabraDevices)
         {
           if (!jabraDevice.IsLocked)
           {
             jabraDevice.Lock();
           }
-          if (muted)
-          {
-            if (!jabraDevice.IsMicrophoneMuted)
-            {
-              jabraDevice.SetMicrophoneMuted(true);
-            }
-          }
-          else
-          {
-            if (jabraDevice.IsMicrophoneMuted)
-            {
-              jabraDevice.SetMicrophoneMuted(false);
-            }
-          }
+          jabraDevice.SetMicrophoneMuted(muted);
         }
       }
     }
@@ -202,26 +304,14 @@ namespace JabraCallControlExtension
           {
             jabraDevice.Lock();
           }
-          if (ringing)
-          {
-            if (!jabraDevice.IsRinging)
-            {
-              jabraDevice.SetRinger(true);
-            }
-          }
-          else
-          {
-            if (jabraDevice.IsRinging)
-            {
-              jabraDevice.SetRinger(false);
-            }
-          }
+          jabraDevice.SetRinger(ringing);
         }
       }
     }
 
     private void SetCallOnHold(bool onHold)
     {
+      /*
       lock (jabraLock)
       {
         foreach (var jabraDevice in jabraDevices)
@@ -230,43 +320,11 @@ namespace JabraCallControlExtension
           {
             jabraDevice.Lock();
           }
-          if (onHold)
-          {
-            if (!jabraDevice.IsOnHold)
-            {
-              jabraDevice.SetCallOnHold(true);
-            }
-          }
-          else
-          {
-            if (jabraDevice.IsOnHold)
-            {
-              jabraDevice.SetCallOnHold(false);
-            }
-          }
+          jabraDevice.SetCallOnHold(onHold);
         }
       }
+      */
     }
-
-    #endregion
-
-    #region API Notifications Placeholder
-
-    /*
-    private void SendNotificationToDevice(IInteractionVoice ixnVoice, string status)
-    {
-      log.Debug("Notify device of call in " + status);
-      // TODO
-//      MessageBox.Show("Notify device of call in " + status);
-    }
-
-    private void SendNotificationToDevice(SIPEndpoint sipEndpoint, bool isMicrophoneMuted)
-    {
-      log.Debug("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
-      // TODO
-//      MessageBox.Show("Notify device of microphone " + (isMicrophoneMuted ? "mute" : "unmute"));
-    }
-    */
 
     #endregion
 
@@ -498,10 +556,14 @@ namespace JabraCallControlExtension
           if (receivedEvent.Id == EventRinging.MessageId)
           {
             RegisterSIPEPEventHandlers(iv);
-//            SendNotificationToDevice(iv, "Ringing");
+
+            //            SendNotificationToDevice(iv, "Ringing");
+
+            // Send states to the Jabra device
             SetRinger(true);
             activeCall = heldCall = null;
             incomingCall = iv;
+            isCallMuted = false;
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Connected)
@@ -509,27 +571,35 @@ namespace JabraCallControlExtension
           if (receivedEvent.Id == EventEstablished.MessageId)
           {
 //            SendNotificationToDevice(iv, "Established");
+
+            // Send states to the Jabra device
             SetRinger(false);
             SetHookState(true);
             SetCallOnHold(false);
             incomingCall = heldCall = null;
             activeCall = iv;
+            isCallMuted = false;
           }
           else if (receivedEvent.Id == EventRetrieved.MessageId)
           {
-//            SendNotificationToDevice(iv, "Retrieved");
+            //            SendNotificationToDevice(iv, "Retrieved");
+
+            // Send states to the Jabra device
             SetRinger(false);
             SetHookState(true);
             SetCallOnHold(false);
             incomingCall = heldCall = null;
             activeCall = iv;
+            isCallMuted = false;
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Held)
         {
           if (receivedEvent.Id == EventHeld.MessageId)
           {
-//            SendNotificationToDevice(iv, "Held");
+            //            SendNotificationToDevice(iv, "Held");
+
+            // Send states to the Jabra device
             SetCallOnHold(true);
             SetHookState(false);
             SetRinger(false);
@@ -543,11 +613,16 @@ namespace JabraCallControlExtension
                  (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Redirected))
         {
           // NB: Sent two times....
-//          SendNotificationToDevice(iv, "Ended");
+
+
+          //          SendNotificationToDevice(iv, "Ended");
+
+          // Send states to the Jabra device
           SetRinger(false);
           SetHookState(false);
           SetCallOnHold(false);
           activeCall = incomingCall = heldCall = null;
+          isCallMuted = false;
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.PresentedOut)
         {
