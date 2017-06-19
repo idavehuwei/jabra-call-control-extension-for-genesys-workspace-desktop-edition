@@ -10,7 +10,7 @@ The extension supports:
 -	All professional Jabra headsets
 
 # Installation
-To install the extension – unzip the [zip file](https://github.com/gnaudio/jabra-call-control-extension-for-genesys-workspace-desktop-edition/releases) and copy the content to _C:\Program Files (x86)\GCTI\Workspace Desktop Edition_ and restart the Genesys software.
+To install the extension – unzip the [installation file](https://github.com/gnaudio/jabra-call-control-extension-for-genesys-workspace-desktop-edition/releases) and copy the content to _C:\Program Files (x86)\GCTI\Workspace Desktop Edition_ and restart the Genesys software.
 
 # Uninstallation
 To uninstall the extension close the Genesys software and remove the files that was installed.
