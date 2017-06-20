@@ -306,7 +306,7 @@ namespace JabraCallControlExtension
       }
     }
 
-    private void SetRinger(bool ringing)
+    private void SetRinger(bool ringing, string callerId = null)
     {
       lock (jabraLock)
       {
@@ -318,7 +318,14 @@ namespace JabraCallControlExtension
           {
             jabraDevice.Lock();
           }
-          jabraDevice.SetRinger(ringing);
+          if (string.IsNullOrEmpty(callerId))
+          {
+            jabraDevice.SetRinger(ringing);
+          }
+          else
+          {
+            jabraDevice.SetRinger(ringing, callerId);
+          }
         }
       }
     }
@@ -572,8 +579,8 @@ namespace JabraCallControlExtension
             /* Ringing */
             log.Info("InteractionEvent: Ringing");
 
-            // Send states to the Jabra device
-            SetRinger(true);
+            // Update Jabra device state
+            SetRinger(true, iv.PhoneNumber);
             incomingCall = iv;
           }
         }
@@ -584,7 +591,7 @@ namespace JabraCallControlExtension
             /* Established */
             log.Info("InteractionEvent: Established");
 
-            // Send states to the Jabra device
+            // Update Jabra device state
             SetRinger(false);
             SetHookState(true);
             incomingCall =  null;
@@ -599,7 +606,7 @@ namespace JabraCallControlExtension
             /* Retrieved */
             log.Info("InteractionEvent: Retrieved");
 
-            // Send states to the Jabra device
+            // Update Jabra device state
             SetHookState(true);
 
             heldCalls.Remove(iv);
@@ -621,7 +628,7 @@ namespace JabraCallControlExtension
             /* Held */
             log.Info("InteractionEvent: Held");
 
-            // Send states to the Jabra device
+            // Update Jabra device state
             SetCallOnHold(true);
             SetHookState(false);
             activeCall = null;
@@ -638,11 +645,24 @@ namespace JabraCallControlExtension
           /* Ended */
           log.Info("InteractionEvent: Ended");
 
-          // Send states to the Jabra device
+          // Update Jabra device state
           SetRinger(false);
-          SetHookState(false);
-          activeCall = null;
-          isCallMuted = false;
+          if (iv == activeCall)
+          {
+            SetHookState(false);
+            activeCall = null;
+          }
+          else
+          {
+            if (heldCalls.Contains(iv))
+            {
+              heldCalls.Remove(iv);
+              if (heldCalls.Count == 0)
+              {
+                SetCallOnHold(false);
+              }
+            }
+          }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.PresentedOut)
         {
