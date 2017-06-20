@@ -3,6 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
@@ -34,7 +35,7 @@ namespace JabraCallControlExtension
 
     private IInteractionVoice incomingCall = null;
     private IInteractionVoice activeCall = null;
-    private IInteractionVoice heldCall = null;
+    private List<IInteractionVoice> heldCalls = new List<IInteractionVoice>();
     private bool isCallMuted = false;
 
     #endregion
@@ -205,9 +206,9 @@ namespace JabraCallControlExtension
         {
           RequestHoldCall(activeCall);
         }
-        else if (heldCall != null)
+        else if (heldCalls.Any())
         {
-          RequestRetrieveCall(heldCall);
+          RequestRetrieveCall(heldCalls.First());
         }
       }
 
@@ -573,9 +574,7 @@ namespace JabraCallControlExtension
 
             // Send states to the Jabra device
             SetRinger(true);
-            activeCall = heldCall = null;
             incomingCall = iv;
-            isCallMuted = false;
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Connected)
@@ -588,10 +587,12 @@ namespace JabraCallControlExtension
             // Send states to the Jabra device
             SetRinger(false);
             SetHookState(true);
-            SetCallOnHold(false);
-            incomingCall = heldCall = null;
+            incomingCall =  null;
             activeCall = iv;
+
+            // Always start unmuted
             isCallMuted = false;
+            SetMicrophoneMuted(false);
           }
           else if (receivedEvent.Id == EventRetrieved.MessageId)
           {
@@ -599,12 +600,18 @@ namespace JabraCallControlExtension
             log.Info("InteractionEvent: Retrieved");
 
             // Send states to the Jabra device
-            SetRinger(false);
             SetHookState(true);
-            SetCallOnHold(false);
-            incomingCall = heldCall = null;
+
+            heldCalls.Remove(iv);
+            if (heldCalls.Count == 0)
+            {
+              SetCallOnHold(false);
+            }
             activeCall = iv;
+
+            // Always start unmuted
             isCallMuted = false;
+            SetMicrophoneMuted(false);
           }
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Held)
@@ -617,9 +624,8 @@ namespace JabraCallControlExtension
             // Send states to the Jabra device
             SetCallOnHold(true);
             SetHookState(false);
-            SetRinger(false);
-            incomingCall = activeCall = null;
-            heldCall = iv;
+            activeCall = null;
+            heldCalls.Add(iv);
           }
         }
         else if ((iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Ended) ||
@@ -627,7 +633,7 @@ namespace JabraCallControlExtension
                  (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Dropped) ||
                  (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.Redirected))
         {
-          // NB: Sent two times....
+          // Sent two times....
 
           /* Ended */
           log.Info("InteractionEvent: Ended");
@@ -635,8 +641,7 @@ namespace JabraCallControlExtension
           // Send states to the Jabra device
           SetRinger(false);
           SetHookState(false);
-          SetCallOnHold(false);
-          activeCall = incomingCall = heldCall = null;
+          activeCall = null;
           isCallMuted = false;
         }
         else if (iv.State == Genesyslab.Enterprise.Model.Interaction.InteractionStateType.PresentedOut)
