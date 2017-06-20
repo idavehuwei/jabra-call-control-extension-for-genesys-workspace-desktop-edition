@@ -8,7 +8,6 @@ using System.Windows;
 using System.Windows.Threading;
 using Genesyslab.Desktop.Infrastructure;
 using Genesyslab.Desktop.Infrastructure.Commands;
-using Genesyslab.Desktop.Infrastructure.Events;
 using Genesyslab.Desktop.Modules.Core.Model.Agents;
 using Genesyslab.Desktop.Modules.Core.Model.Interactions;
 using Genesyslab.Desktop.Modules.SIPEndpointCommunication;
@@ -17,7 +16,6 @@ using Genesyslab.Platform.Commons.Logging;
 using Genesyslab.Platform.Commons.Protocols;
 using Genesyslab.Platform.Voice.Protocols.TServer.Events;
 using JabraHidTelephonyApi;
-using Microsoft.Practices.Composite.Events;
 using Microsoft.Practices.Unity;
 
 namespace JabraCallControlExtension
@@ -101,10 +99,10 @@ namespace JabraCallControlExtension
           {
             action();
           }
-          catch (Exception e)
+          catch (Exception exception)
           {
             // Don't do anyting - only log the exception
-            log.Error($"Got an exception (workQueue): {e.Message}");
+            log.Error("Got an workQueue exception", exception);
           }
         }
       });
@@ -146,6 +144,7 @@ namespace JabraCallControlExtension
     {
       lock (jabraLock)
       {
+        log.Info("Jabra device added");
         device.ButtonInput += OnButtonInput;
         jabraDevices.Add(device);
       }
@@ -155,6 +154,7 @@ namespace JabraCallControlExtension
     {
       lock (jabraLock)
       {
+        log.Info("Jabra device removed");
         device.ButtonInput -= OnButtonInput;
         jabraDevices.Remove(device);
       }
@@ -162,6 +162,15 @@ namespace JabraCallControlExtension
 
     private void OnButtonInput(object sender, ButtonInputEventArgs e)
     {
+      if (e.Value.HasValue)
+      {
+        log.Info($"OnButtonInput: {e.Button.ToString()}, {e.Value.Value}");
+      }
+      else
+      {
+        log.Info($"OnButtonInput: {e.Button.ToString()}, (no value)");
+      }
+
       #region Mic mute
 
       if (e.Button == ButtonId.MicMute)
@@ -261,6 +270,8 @@ namespace JabraCallControlExtension
     {
       lock (jabraLock)
       {
+        log.Info($"SetHookState: {offHook}");
+
         foreach (var jabraDevice in jabraDevices)
         {
           if (!jabraDevice.IsLocked)
@@ -280,6 +291,8 @@ namespace JabraCallControlExtension
     {
       lock (jabraLock)
       {
+        log.Info($"SetMicrophoneMuted: {muted}");
+
         isCallMuted = muted;
         foreach (var jabraDevice in jabraDevices)
         {
@@ -296,6 +309,8 @@ namespace JabraCallControlExtension
     {
       lock (jabraLock)
       {
+        log.Info($"SetRinger: {ringing}");
+
         foreach (var jabraDevice in jabraDevices)
         {
           if (!jabraDevice.IsLocked)
@@ -311,6 +326,8 @@ namespace JabraCallControlExtension
     {
       lock (jabraLock)
       {
+        log.Info($"SetCallOnHold: {onHold}");
+
         foreach (var jabraDevice in jabraDevices)
         {
           if (!jabraDevice.IsLocked)
@@ -343,7 +360,6 @@ namespace JabraCallControlExtension
         }
       }
       return interactionVoice;
-
     }
 
     delegate void RequestAnswerCallDelegate(IInteractionVoice ixnVoice);
@@ -365,7 +381,7 @@ namespace JabraCallControlExtension
 
     public void RequestAnswerCall(string token)
     {
-      IInteractionVoice ixnVoice = this.FindVoiceInteraction(token);
+      var ixnVoice = this.FindVoiceInteraction(token);
       this.RequestAnswerCall(ixnVoice);
     }
 
@@ -388,7 +404,7 @@ namespace JabraCallControlExtension
 
     public void RequestReleaseCall(string token)
     {
-      IInteractionVoice ixnVoice = this.FindVoiceInteraction(token);
+      var ixnVoice = this.FindVoiceInteraction(token);
       this.RequestReleaseCall(ixnVoice);
     }
 
@@ -411,7 +427,7 @@ namespace JabraCallControlExtension
 
     public void RequestHoldCall(string token)
     {
-      IInteractionVoice ixnVoice = this.FindVoiceInteraction(token);
+      var ixnVoice = this.FindVoiceInteraction(token);
       this.RequestHoldCall(ixnVoice);
     }
 
@@ -434,7 +450,7 @@ namespace JabraCallControlExtension
 
     public void RequestRetrieveCall(string token)
     {
-      IInteractionVoice ixnVoice = this.FindVoiceInteraction(token);
+      var ixnVoice = this.FindVoiceInteraction(token);
       this.RequestRetrieveCall(ixnVoice);
     }
 
@@ -471,7 +487,6 @@ namespace JabraCallControlExtension
       {
         log.Error("Exception in TriggerVoiceChainOfCommands", exp);
       }
-
     }
 
     #endregion
@@ -553,7 +568,8 @@ namespace JabraCallControlExtension
           {
             RegisterSIPEPEventHandlers(iv);
 
-            //            SendNotificationToDevice(iv, "Ringing");
+            /* Ringing */
+            log.Info("InteractionEvent: Ringing");
 
             // Send states to the Jabra device
             SetRinger(true);
@@ -566,7 +582,8 @@ namespace JabraCallControlExtension
         {
           if (receivedEvent.Id == EventEstablished.MessageId)
           {
-//            SendNotificationToDevice(iv, "Established");
+            /* Established */
+            log.Info("InteractionEvent: Established");
 
             // Send states to the Jabra device
             SetRinger(false);
@@ -578,7 +595,8 @@ namespace JabraCallControlExtension
           }
           else if (receivedEvent.Id == EventRetrieved.MessageId)
           {
-            //            SendNotificationToDevice(iv, "Retrieved");
+            /* Retrieved */
+            log.Info("InteractionEvent: Retrieved");
 
             // Send states to the Jabra device
             SetRinger(false);
@@ -593,7 +611,8 @@ namespace JabraCallControlExtension
         {
           if (receivedEvent.Id == EventHeld.MessageId)
           {
-            //            SendNotificationToDevice(iv, "Held");
+            /* Held */
+            log.Info("InteractionEvent: Held");
 
             // Send states to the Jabra device
             SetCallOnHold(true);
@@ -610,8 +629,8 @@ namespace JabraCallControlExtension
         {
           // NB: Sent two times....
 
-
-          //          SendNotificationToDevice(iv, "Ended");
+          /* Ended */
+          log.Info("InteractionEvent: Ended");
 
           // Send states to the Jabra device
           SetRinger(false);
@@ -625,7 +644,10 @@ namespace JabraCallControlExtension
           if (receivedEvent.Id == EventDialing.MessageId)
           {
             RegisterSIPEPEventHandlers(iv);
-//            SendNotificationToDevice(iv, "Dialing");
+
+            /* Dialing */
+            log.Info("InteractionEvent: Dialing");
+
           }
           else if (receivedEvent.Id == EventNetworkReached.MessageId)
           {
@@ -801,27 +823,12 @@ namespace JabraCallControlExtension
       {
         SIPEndpoint sipEndpoint = sender as SIPEndpoint;
         bool microphoneMuted = sipEndpoint.IsMicrophoneMuted;
-//        SendNotificationToDevice(sipEndpoint, microphoneMuted);
+
+        /* Mic mute change */
 
         SetMicrophoneMuted(microphoneMuted);
       }
       // Should also work with IsSpeakerMuted, MicrophoneVolume, SpeakerVolume
-    }
-
-    #endregion
-
-    #region Generate Alert/System Message
-
-    public void NotifyUserWithAlert(string alertId, object[] alertParams)
-    {
-      container.Resolve<IEventAggregator>().GetEvent<AlertEvent>().Publish(new Alert()
-      {
-        Section = "Login",
-        Severity = SeverityType.Information,
-        Id = alertId,
-        Target = "Text",
-        Parameters = alertParams
-      });
     }
 
     #endregion
