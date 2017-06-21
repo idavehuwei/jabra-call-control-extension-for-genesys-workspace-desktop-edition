@@ -4,6 +4,9 @@
 # Overview
 Genesys Workspace Desktop Edition extension that integrates the physical buttons on a Jabra headset with the Genesys SIP client
 
+# Build status
+![Build status](https://gnaudio.visualstudio.com/_apis/public/build/definitions/45495ae2-8252-4d9e-a321-699be9abf508/99/badge)
+
 # Extension
 The extension supports:
 -	Genesys Workspace Desktop Edition version 8.5
