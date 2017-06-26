@@ -14,7 +14,7 @@ This extension supports:
 -	Genesys Workspace Desktop Edition version 8.5
 -	All professional Jabra headsets
 
-# Features
+## Features
 Supported device features:
 -	Device ringer
 - Accept/reject incoming call
