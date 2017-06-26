@@ -9,8 +9,8 @@ Write-Host Executing VSTSSetVersion.ps1
 # Stop on errors
 $ErrorActionPreference = "Stop" 
 
-$searchtext = "0\.2\.0\.0"
-$replacetext = "0.2." + $Env:BUILD_BUILDID + ".0"
+$searchtext = "0\.9\.0\.0"
+$replacetext = "0.9." + $Env:BUILD_BUILDID + ".0"
 
 Write-Host Replacing $searchtext with $replacetext
 
